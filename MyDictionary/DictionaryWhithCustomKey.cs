@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace MyDictionary
@@ -11,10 +12,10 @@ namespace MyDictionary
         TName Name { get; set; }
     }
 
-    public class DictionaryWhithCustomKey<TId, TName, TValue> : IDictionary<IMyKey<TId, TName>, TValue>
+    public class DictionaryWhithCustomKey<TId, TName, TValue> : IDictionary<IMyKey<TId, TName>, TValue>, ICollection
                                                         where TId : IEquatable<TId>
                                                         where TName : IEquatable<TName>
-                                                        where TValue : IEquatable<TValue>
+                                                       
     {
         private List<MyObject<TId, TName, TValue>> values;
 
@@ -22,7 +23,7 @@ namespace MyDictionary
         {
             this.values = new List<MyObject<TId, TName, TValue>>();
         }
-
+        
         public TValue this[IMyKey<TId, TName> key]
         {
             get
@@ -35,9 +36,10 @@ namespace MyDictionary
                 SetValue(key, value);
             }
         }
-        public ICollection<TValue> this[TId id] => GetValue(id);
+        public ICollection<KeyValuePair<IMyKey<TId, TName>, TValue>> this[TId id] => GetValue(id);
 
-        public ICollection<TValue> this[int key, TName name] => GetValue(name);
+        public ICollection<KeyValuePair<IMyKey<TId, TName>, TValue>> this[TName name] => GetValue(name);
+       
 
         private TValue GetValue(IMyKey<TId, TName> key)
         {
@@ -50,26 +52,27 @@ namespace MyDictionary
             }
             return default(TValue);
         }
-        private ICollection<TValue> GetValue(TId id)
+        private ICollection<KeyValuePair<IMyKey<TId,TName>,TValue>> GetValue(TId id)
         {
-            ICollection<TValue> collection = new List<TValue>();
+            var collection = new List<KeyValuePair<IMyKey<TId, TName>, TValue>>();
             foreach (var item in values)
             {
                 if (item.MyKey.Id.Equals(id))
                 {
-                    collection.Add(item.Value);
+                    collection.Add(new KeyValuePair<IMyKey<TId, TName>, TValue>(item.MyKey,item.Value));
                 }
             }
             return collection;
         }
-        private ICollection<TValue> GetValue(TName name)
+       
+        private ICollection<KeyValuePair<IMyKey<TId, TName>, TValue>> GetValue(TName name)
         {
-            ICollection<TValue> collection = new List<TValue>();
+            var collection = new List<KeyValuePair<IMyKey<TId, TName>, TValue>>();
             foreach (var item in values)
             {
                 if (item.MyKey.Name.Equals(name))
                 {
-                    collection.Add(item.Value);
+                    collection.Add(new KeyValuePair<IMyKey<TId, TName>, TValue>(item.MyKey, item.Value));
                 }
             }
             return collection;
@@ -119,6 +122,10 @@ namespace MyDictionary
             }
         }
 
+        public object SyncRoot => ((ICollection)values).SyncRoot;
+
+        public bool IsSynchronized => ((ICollection)values).IsSynchronized;
+
         public void Add(KeyValuePair<IMyKey<TId, TName>, TValue> item)
         {
             values.Add(new MyObject<TId, TName, TValue>(item.Key.Id, item.Key.Name, item.Value));
@@ -127,6 +134,10 @@ namespace MyDictionary
         public void Add(IMyKey<TId, TName> key, TValue value)
         {
             values.Add(new MyObject<TId, TName, TValue>(key.Id, key.Name, value));
+        }
+        public void Add(TId id, TName name, TValue value)
+        {
+            values.Add(new MyObject<TId, TName, TValue>(id, name, value));
         }
 
         public void Clear()
@@ -221,6 +232,11 @@ namespace MyDictionary
             return false;
         }
 
+        public void CopyTo(Array array, int index)
+        {
+            ((ICollection)values).CopyTo(array, index);
+        }
+
 
 
         #region MyObject
@@ -247,13 +263,10 @@ namespace MyDictionary
         }
 
         #endregion
-
-        #region DictionaryWhithCustomKeyEnumerator
-
         private class DictionaryWhithCustomKeyEnumerator<TId1, TName1, TValue1> :IEnumerator<KeyValuePair<IMyKey<TId1, TName1>, TValue1>> 
-            where TId1 : IEquatable<TId1>
-            where TName1 : IEquatable<TName1>
-            where TValue1 : IEquatable<TValue1>
+                                                                                    where TId1 : IEquatable<TId1>
+                                                                                    where TName1 : IEquatable<TName1>
+                                                                                    
         {
             private List<DictionaryWhithCustomKey<TId1, TName1, TValue1>.MyObject<TId1, TName1, TValue1>> values;
             private Int32 _curretIndex = -1;
@@ -305,9 +318,7 @@ namespace MyDictionary
             }
 
         }
-        
-
-        #endregion    }
+    }
 
 
 }

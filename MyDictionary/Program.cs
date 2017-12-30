@@ -32,7 +32,12 @@ namespace MyDictionary
             {
                 Console.WriteLine($"Id:{item.Key.Id} Имя:{item.Key.Name} Возраст:{item.Value}");
             }
-          
+            Console.WriteLine(new string('-',20));
+            var users = myDictionay[1];
+            foreach (var user in users)
+            {
+                Console.WriteLine($"Id:{user.Key.Id} Имя {user.Key.Name} Возраст {user.Value}");
+            }
             Console.ReadKey();
         }
     }
